@@ -1,0 +1,6 @@
+How to:
+- Make sure you have port forwarded before you attempt to play online with friends (You don't need to, if you're using it offline).
+- Make sure the Minecraft Server file is named "server".
+- Make sure the path to file is absolute! It should resemble someething like: "C:\Minecraft-Server\World1"
+- The server launcher will handle the confirmation of the eula! (Makes for zero need to be editing files!")!
+- As simple as adding the path to the file and hitting "launch server"
