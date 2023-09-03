@@ -10,17 +10,6 @@ import mcrcon
 import psutil
 import socket
 
-"""TODO:
-- change host name in commandlineframe to get the device name dynamically using socket.gethostbyname
-- make line breaks between command responses in order to make some commands not look blocky
-- make the entrybox to start the server allow the use of the enter key to start the server
-- disable Java Server Manager once rcon commands have been fixed and are working correctly
-- add a user list so the server goes into hibernation once player count hits zero
-- add a column that displays banned users
-- change github description (is no longer to boot the java manager - instead is its own server manager)
-- when stopping the server the textbox should be updated to display that the server is being stopped
-"""
-
 class StatsFrame(customtkinter.CTkFrame):
     def __init__(self, master, title):
         super().__init__(master)
