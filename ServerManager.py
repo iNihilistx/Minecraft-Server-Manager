@@ -1,10 +1,25 @@
-import customtkinter
-from tkinter import *
-import psutil
+import os
+import random
+import re
 import subprocess
 import threading
-import os
+from tkinter import *
+
+import customtkinter
+import mcrcon
 import psutil
+import socket
+
+"""TODO:
+- change host name in commandlineframe to get the device name dynamically using socket.gethostbyname
+- make line breaks between command responses in order to make some commands not look blocky
+- make the entrybox to start the server allow the use of the enter key to start the server
+- disable Java Server Manager once rcon commands have been fixed and are working correctly
+- add a user list so the server goes into hibernation once player count hits zero
+- add a column that displays banned users
+- change github description (is no longer to boot the java manager - instead is its own server manager)
+- when stopping the server the textbox should be updated to display that the server is being stopped
+"""
 
 class StatsFrame(customtkinter.CTkFrame):
     def __init__(self, master, title):
@@ -54,25 +69,100 @@ class CommandLineFrame(customtkinter.CTkFrame):
             self, 
             width=1000,
             height=450)
-        self.command_launcher.grid(row=1, column=0, sticky="w", padx=10, pady=10)
+        self.command_launcher.grid(row=1, column=0, sticky="w", padx=10, pady=5)
+
+        self.command_entry = customtkinter.CTkEntry(self, placeholder_text="help", width=1000, height=30)
+        self.command_entry.grid(row=2, column=0, sticky="w", padx=10, pady=10)
+        self.command_entry.bind("<Return>", lambda e: self.send_command()) # pressing enter will send the command
 
         self.launch_button = customtkinter.CTkButton(self, text="Launch Server", fg_color="green", hover_color="#00A36C", cursor="hand2", command=self.run_command)
-        self.launch_button.grid(row=2, column=0, padx=10, pady=10, sticky="w")
+        self.launch_button.grid(row=3, column=0, padx=10, pady=10, sticky="w")
 
         self.stop_button = customtkinter.CTkButton(self, text="Stop Server", fg_color="red", hover_color="#C41E3A", cursor="hand2", command=self.stop_server)
-        self.stop_button.grid(row=2, column=0, padx=10, pady=10, sticky="e")
+        self.stop_button.grid(row=3, column=0, padx=10, pady=10, sticky="e")
 
         self.directory_input = customtkinter.CTkEntry(self, placeholder_text="D:\MinecraftServer - example path", width=300)
-        self.directory_input.grid(row=2, column=0)
+        self.directory_input.grid(row=3, column=0)
+        self.directory_input.bind("<Return>", lambda e: self.run_command())
 
         self.proc = proc
+
+    def send_command(self):
+        directory = self.directory_input.get()
+        file = "server.properties"
+        self.name = socket.gethostname()
+        self.host = socket.gethostbyname(self.name)
+        self.port = int(25575)
+
+        try:
+            with open(f"{directory}/{file}") as file:
+                properties = file.read()
+            
+            # re.search() should allow us to finding a matching regex pattern in a string
+            # "rcon.password=(.*)" is the regex pattern, r is the raw string literal avoids having to escape backslash
+            # rcon.passwords= matches the literal text "rcon.password="
+            # (.*) matches any character after the rcon.password= and captures them into a group The .* will match the chars()
+            # group(1) returns the contents
+            pattern = r"rcon.password=(.*)"
+            match = re.search(pattern, properties)
+            if match:
+                password = match.group(1)
+
+                # create and connect to the MCRcon server
+                rcon = mcrcon.MCRcon(self.host, password)
+                rcon.connect()
+
+                # send and retrieve response
+                command = self.command_entry.get()
+                response = rcon.command(command)
+
+                # update the command launcher with the response
+                self.command_launcher.insert(END, f">:{command} - {response}\n\n")
+                # clear the entry
+                self.command_entry.delete(0, END)
+            else:
+                raise ValueError("Password not found in server.properties file.")
+            
+        except mcrcon.MCRconException as error:
+            print(f"{error}")
 
     def run_command(self):
         directory = self.directory_input.get()
         file_name = "eula.txt"
         filepath = f'{directory}/{file_name}'
         self.running = True
+
+        rcon_file = "server.properties"
+        rcon_path = f'{directory}/{rcon_file}'
+        rcon_pwd = random.randint(1000, 9999)
+
+        print(rcon_pwd)
+
+        with open(f'{rcon_path}', 'r') as rconpass:
+            properties = rconpass.read()
+        if "rcon.password=" in properties:
+            random_pass = rcon_pwd
+            properties = properties.replace("rcon.password=", f"rcon.password={random_pass}")
+        elif "rcon.password=" not in properties:
+            properties += "\nrcon.password=" + random_pass
+        with open(f"{rcon_path}", "w") as file:
+            file.write(properties)
+
+        with open(f'{rcon_path}', 'r') as rcon:
+            rcon_enable = rcon.read()
         
+        # check to see if its modified or not
+        if 'enable-rcon=true' not in rcon_enable:
+            # change it
+            rcon_enable = rcon_enable.replace('enable-rcon=false', 'enable-rcon=true')
+
+            # open the file and make the changes
+            with open(f'{rcon_path}', 'w') as rcon:
+                rcon.write(rcon_enable)
+                rcon.close()
+        else:
+            print("Already Enabled")
+
 
         print(directory)
         with open(f'{filepath}', 'r') as file:
@@ -97,8 +187,8 @@ class CommandLineFrame(customtkinter.CTkFrame):
             stdout=subprocess.PIPE,
             cwd=directory
         )
-
         self.thread = threading.Thread(target=self.read_stdout, args=(directory,))
+        self.thread.setDaemon(True)
         self.thread.start()
 
     def stop_server(self):
@@ -178,13 +268,9 @@ class SpeedTestFrame(customtkinter.CTkFrame):
         self.cmd = ["ping", "-t", "8.8.8.8"] # running the ping
         self.proc = subprocess.Popen(self.cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE) # start the process
         
-        threading.Thread(target=self.read_stdout, args=(self.proc, self.speed_test)).start() # start the thread to read stdout
-
-    def find_process_id(self):
-        for proc in psutil.process_iter(['pid', 'name']):
-            if proc.info['name'] == 'java.exe' and proc.info['pid'] != os.getpid():
-                return proc.info['pid']
-        return None
+        self.thread = threading.Thread(target=self.read_stdout, args=(self.proc, self.speed_test)) # start the thread to read stdout
+        self.thread.setDaemon(True)
+        self.thread.start()
 
     def read_stdout(self, proc, textbox):
         while True:
@@ -197,15 +283,16 @@ class SpeedTestFrame(customtkinter.CTkFrame):
                 self.speed_test.insert('end', output.decode('utf-8')) # insert it into the text box
                 self.speed_test.yview(END)
             
-        
-
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
 
         self.proc = None
-        self.title("Minecraft [Java] Server Launcher - minecraft_server.jar")
-        self.geometry("800x757")
+        self.hostname = socket.gethostname()
+        self.ipaddr = socket.gethostbyname(self.hostname)
+
+        self.title(f"Minecraft [Java] Server Manager: [ Expected File Name: server.jar ] ~ [ Device Address: {self.ipaddr} ]")
+        self.geometry("870x800")
         self._set_appearance_mode("dark")
         self.resizable(False, False)
 
@@ -214,7 +301,7 @@ class App(customtkinter.CTk):
 
         #self.grid_rowconfigure(0, weight=1)
         #self.grid_rowconfigure(1, weight=1)
-        
+
         # frame one - CPU, MEM, DISK
         self.stats = StatsFrame(self, "Device Status")
         self.stats.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
@@ -227,7 +314,6 @@ class App(customtkinter.CTk):
         self.speedtest = SpeedTestFrame(self, "Speed Test")
         self.speedtest.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
 
-
         self.update_stats()
         
     def update_stats(self):
@@ -236,7 +322,6 @@ class App(customtkinter.CTk):
         self.stats.update_disk()
 
         self.after(1000, self.update_stats)
-
 
 if __name__ == "__main__":
     app = App()
