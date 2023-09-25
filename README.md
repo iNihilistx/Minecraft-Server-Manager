@@ -2,7 +2,9 @@
   Nihilists Minecraft Server Manager
 </h1>
 <div align="center">
-  <img src="https://media.giphy.com/media/ttknk7M3d3UBEeZsii/giphy.gif" width="600" height="300"/>
+  <img src="https://media.giphy.com/media/Fmw5xGBAh6SeA/giphy.gif" width="600" height="300"/>
+  
+  
 </div>
 
 <h1>
