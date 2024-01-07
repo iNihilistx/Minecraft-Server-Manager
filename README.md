@@ -15,7 +15,7 @@
   Nihilists Server Manager makes use of the CustomTkinter library in order to take a more modern approach to Minecrafts older Server Manager.
   The aim of the project was to take everything great about the old manager and remaster it with some much needed improvements!
   Unlike Minecrafts old Server Manager, Nihilists Server Manager entirely handles everything needed to start your own server! (except port forwarding). - see how: https://thebreakdown.xyz/how-to-port-forward-for-a-minecraft-server/<br>
-  Starting a game is as simple as opening Nihilists Server Manager giving it the path to your server file and hitting start!
+  Starting a server is as simple as opening Nihilists Server Manager giving it the path to your server file and hitting start!
   </p1>
 </div>
 
