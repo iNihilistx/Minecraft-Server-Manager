@@ -70,7 +70,7 @@ class CommandLineFrame(customtkinter.CTkFrame):
         self.stop_button = customtkinter.CTkButton(self, text="Stop Server", fg_color="red", hover_color="#C41E3A", cursor="hand2", command=self.stop_server)
         self.stop_button.grid(row=3, column=0, padx=10, pady=10, sticky="e")
 
-        self.directory_input = customtkinter.CTkEntry(self, placeholder_text="D:\MinecraftServer - example path", width=300)
+        self.directory_input = customtkinter.CTkEntry(self, placeholder_text=r"D:\MinecraftServer - example path", width=300)
         self.directory_input.grid(row=3, column=0)
         self.directory_input.bind("<Return>", lambda e: self.run_command())
 
@@ -258,7 +258,7 @@ class SpeedTestFrame(customtkinter.CTkFrame):
         self.proc = subprocess.Popen(self.cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE) # start the process
         
         self.thread = threading.Thread(target=self.read_stdout, args=(self.proc, self.speed_test)) # start the thread to read stdout
-        self.thread.setDaemon(True)
+        self.thread.daemon = True
         self.thread.start()
 
     def read_stdout(self, proc, textbox):
