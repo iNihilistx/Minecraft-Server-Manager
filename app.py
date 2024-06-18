@@ -37,7 +37,7 @@ class StatsFrame(customtkinter.CTkFrame):
 
     def update_mem(self):
         mem = psutil.virtual_memory()[2]
-        self.mem_var.set(f"Remember: {mem}%")
+        self.mem_var.set(f"Memory: {mem}%")
     
     def update_disk(self):
         disk = psutil.disk_usage('/')[3]
