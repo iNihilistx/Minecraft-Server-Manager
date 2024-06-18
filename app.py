@@ -60,7 +60,7 @@ class CommandLineFrame(customtkinter.CTkFrame):
             height=450)
         self.command_launcher.grid(row=1, column=0, sticky="w", padx=10, pady=5)
 
-        self.command_entry = customtkinter.CTkEntry(self, placeholder_text="help", width=1000, height=30)
+        self.command_entry = customtkinter.CTkEntry(self, placeholder_text="Help", width=1000, height=30)
         self.command_entry.grid(row=2, column=0, sticky="w", padx=10, pady=10)
         self.command_entry.bind("<Return>", lambda e: self.send_command()) # pressing enter will send the command
 
