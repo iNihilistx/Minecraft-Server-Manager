@@ -172,7 +172,7 @@ class CommandLineFrame(customtkinter.CTkFrame):
             print("Text exists, skipping...")
 
         self.proc = subprocess.Popen(
-            ["java", "-Xmx1024M", "-Xms1024M", "-jar", "server.jar"], #"nogui"
+            ["java", "-Xmx1024M", "-Xms1024M", "-jar", "server.jar", 'nogui'], #"nogui"
             stdout=subprocess.PIPE,
             cwd=directory
         )
